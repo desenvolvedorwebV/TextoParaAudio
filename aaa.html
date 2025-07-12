@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>TTSMP3 Voz Camila - Completo</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+  textarea { width: 100%; max-width: 600px; }
+  button { margin: 5px; padding: 10px; }
+  #progressContainer { width: 100%; background: #ccc; height: 10px; border-radius: 5px; margin-top: 10px; }
+  #progressBar { width: 0%; height: 100%; background: #4285f4; border-radius: 5px; }
+</style>
+</head>
+<body>
+  <h2>Text-to-Speech (Voz Camila) - TTSMP3</h2>
+  <textarea id="texto" rows="4" placeholder="Digite o texto para converter em fala..."></textarea><br>
+  <button id="gerar">Gerar Áudio</button>
+  <button id="play" disabled>Play</button>
+  <button id="pause" disabled>Pause</button>
+  <button id="stop" disabled>Stop</button>
+  <button id="download" disabled>Download</button>
+
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+  </div>
+
+  <script>
+    let audio = null;
+
+    const gerarBtn = document.getElementById('gerar');
+    const playBtn = document.getElementById('play');
+    const pauseBtn = document.getElementById('pause');
+    const stopBtn = document.getElementById('stop');
+    const downloadBtn = document.getElementById('download');
+    const progressBar = document.getElementById('progressBar');
+
+    gerarBtn.addEventListener('click', async () => {
+      const texto = document.getElementById('texto').value;
+      if (!texto.trim()) {
+        alert('Digite algum texto.');
+        return;
+      }
+
+      try {
+        gerarBtn.disabled = true;
+        gerarBtn.textContent = 'Gerando...';
+
+        const response = await fetch('https://ttsmp3.com/makemp3_new.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            msg: texto,
+            lang: 'Camila',
+            source: 'ttsmp3'
+          })
+        });
+
+        const data = await response.json();
+        console.log(data); // Debug
+
+        if (data.URL) {
+          if (audio) {
+            audio.pause();
+            audio = null;
+          }
+          audio = new Audio(data.URL);
+
+          playBtn.disabled = false;
+          pauseBtn.disabled = false;
+          stopBtn.disabled = false;
+          downloadBtn.disabled = false;
+
+          downloadBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.href = data.URL;
+            link.download = 'tts_camila.mp3';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          };
+
+          audio.addEventListener('timeupdate', () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressBar.style.width = percent + '%';
+          });
+
+          audio.addEventListener('ended', () => {
+            progressBar.style.width = '0%';
+          });
+
+          gerarBtn.textContent = 'Gerar Áudio';
+        } else {
+          alert('Erro ao gerar áudio.');
+          gerarBtn.textContent = 'Gerar Áudio';
+        }
+
+      } catch (error) {
+        console.error(error);
+        alert('Erro ao tentar gerar o áudio.');
+        gerarBtn.textContent = 'Gerar Áudio';
+      } finally {
+        gerarBtn.disabled = false;
+      }
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (audio) audio.play();
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      if (audio) audio.pause();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        progressBar.style.width = '0%';
+      }
+    });
+  </script>
+</body>
+</html>
