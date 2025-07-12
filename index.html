@@ -6,9 +6,10 @@
 <style>
   body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
   textarea { width: 100%; max-width: 600px; }
-  button { margin: 5px; padding: 10px; }
-  #progressContainer { width: 100%; background: #ccc; height: 10px; border-radius: 5px; margin-top: 10px; }
-  #progressBar { width: 0%; height: 100%; background: #4285f4; border-radius: 5px; }
+  button { margin: 5px; padding: 10px; cursor: pointer; }
+  #progressContainer { width: 100%; background: #ccc; height: 10px; border-radius: 5px; margin-top: 10px; max-width: 600px; }
+  #progressBar { width: 0%; height: 100%; background: #4285f4; border-radius: 5px; transition: width 0.2s; }
+  #linkdownload { width: 100%; max-width: 600px; margin-top: 10px; padding: 8px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -24,6 +25,8 @@
     <div id="progressBar"></div>
   </div>
 
+  <input type="text" id="linkdownload" readonly placeholder="Link de download aparecerá aqui">
+
   <script>
     let audio = null;
 
@@ -33,6 +36,7 @@
     const stopBtn = document.getElementById('stop');
     const downloadBtn = document.getElementById('download');
     const progressBar = document.getElementById('progressBar');
+    const linkDownload = document.getElementById('linkdownload');
 
     gerarBtn.addEventListener('click', async () => {
       const texto = document.getElementById('texto').value;
@@ -65,11 +69,16 @@
           }
           audio = new Audio(data.URL);
 
+          // Atualiza o input com o link gerado
+          linkDownload.value = data.URL;
+
+          // Habilita os controles
           playBtn.disabled = false;
           pauseBtn.disabled = false;
           stopBtn.disabled = false;
           downloadBtn.disabled = false;
 
+          // Configura botão de download
           downloadBtn.onclick = () => {
             const link = document.createElement('a');
             link.href = data.URL;
@@ -79,6 +88,7 @@
             document.body.removeChild(link);
           };
 
+          // Barra de progresso
           audio.addEventListener('timeupdate', () => {
             const percent = (audio.currentTime / audio.duration) * 100;
             progressBar.style.width = percent + '%';
